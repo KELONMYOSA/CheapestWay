@@ -1,0 +1,26 @@
+plugins {
+    id "java-library"
+    id 'org.springframework.boot' version '2.7.5'
+    id 'io.spring.dependency-management' version '1.1.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+def jacksonVersion = "2.13.4",
+    slf4jVersion = "2.0.3",
+    clickhouseVersion = "0.3.2-patch11"
+
+dependencies {
+    implementation(
+            "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion",
+            "org.slf4j:slf4j-simple:$slf4jVersion",
+            "com.clickhouse:clickhouse-jdbc:$clickhouseVersion",
+            'org.springframework.boot:spring-boot-starter-web',
+            'org.springframework.kafka:spring-kafka',
+            'org.springframework.boot:spring-boot-starter-websocket',
+            'org.springframework.boot:spring-boot-starter-security'
+    )
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+}

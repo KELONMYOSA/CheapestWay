@@ -1,0 +1,67 @@
+version: '3.3'
+
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    environment:
+      - ZOOKEEPER_CLIENT_PORT=2181
+      - ZOOKEEPER_TICK_TIME=2000
+    ports:
+      - 2181:2181
+    networks:
+      - kafka-net
+  kafka:
+    image: wurstmeister/kafka
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 0
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LISTENERS: LISTENER_INTERNAL://kafka:29092,LISTENER_EXTERNAL://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_INTERNAL://kafka:29092,LISTENER_EXTERNAL://192.168.8.2:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INTERNAL:PLAINTEXT,LISTENER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTERNAL
+      KAFKA_MESSAGE_MAX_BYTES: 10485760
+      KAFKA_CREATE_TOPICS: "to-clickhouse-countries:1:1,to-clickhouse-cities:1:1,to-clickhouse-airports:1:1,to-clickhouse-airlines:1:1,to-clickhouse-routes:1:1,to-clickhouse-tickets:1:1, to-from-rest:1:1"
+    ports:
+      - 9092:9092
+    networks:
+      - kafka-net
+  clickhouse:
+    image: clickhouse/clickhouse-server
+    container_name: clickhouse
+    volumes:
+      - ./clickhouse/data:/var/lib/clickhouse/
+      - ./clickhouse/log:/val/log/clickhouse-server/
+      - ./clickhouse/config.xml:/etc/clickhouse-server/config.xml
+      - ./clickhouse/users.xml:/etc/clickhouse-server/users.xml
+    environment:
+      - CLICKHOUSE_USER=user123
+      - CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT=1
+      - CLICKHOUSE_PASSWORD=pass123
+    ports:
+      - 9000:9000
+      - 8123:8123
+    networks:
+      - kafka-net
+  flights-collector:
+      image: bitnami/java:latest
+      command: "java -jar cheapestway-spring-rest.jar"
+      volumes:
+        - ./jar/application.properties:/app
+        - ./jar/config.properties:/app
+        - ./jar/cheapestway-spring-rest.jar:/app
+        - ./jar/keystore.p12:/app
+  spring-rest:
+    image: bitnami/java:latest
+    command: "java -jar cheapestway-flights-collector.jar"
+    volumes:
+      - ./jar/config.properties:/app
+      - ./jar/cheapestway-flights-collector.jar:/app
+
+networks:
+  kafka-net:
+    driver: bridge

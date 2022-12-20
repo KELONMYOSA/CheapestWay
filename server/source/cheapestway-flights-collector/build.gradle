@@ -1,0 +1,24 @@
+plugins {
+    id "java-library"
+}
+
+repositories {
+    mavenCentral()
+}
+
+def restAssuredVersion = "5.2.0",
+    jacksonVersion = "2.13.4",
+    kafkaVersion = "3.3.1",
+    slf4jVersion = "2.0.3",
+    clickhouseVersion = "0.3.2-patch11"
+
+dependencies {
+    implementation(
+            "io.rest-assured:rest-assured:$restAssuredVersion",
+            "com.fasterxml.jackson.core:jackson-databind:$jacksonVersion",
+            "org.apache.kafka:kafka_2.13:$kafkaVersion",
+            "org.slf4j:slf4j-simple:$slf4jVersion",
+            "com.clickhouse:clickhouse-jdbc:$clickhouseVersion"
+    )
+}
+
